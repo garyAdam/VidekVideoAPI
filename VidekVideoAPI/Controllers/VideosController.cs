@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VidekVideoAPI.Models;
+using MediaToolkit;
+using MediaToolkit.Model;
+using MediaToolkit.Options;
+using VidekVideoAPI.Services;
 
 namespace VidekVideoAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/video")]
     [ApiController]
     public class VideosController : ControllerBase
     {
@@ -42,14 +48,58 @@ namespace VidekVideoAPI.Controllers
         }
 
         // POST: api/Videos
-        [HttpPost]
-        public async Task<ActionResult<Video>> PostVideo(Video video)
+        [HttpPost, DisableRequestSizeLimit]
+        public async Task<ActionResult> PostVideo()
         {
-            _context.Video.Add(video);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetVideo", new { id = video.Id }, video);
+            try
+            {
+                var file = Request.Form.Files[0];
+                var id = int.Parse(Request.Form["Id"]);
+                var title = Request.Form["Title"];
+                var description = Request.Form["Description"];
+                string fullPath;
+                string thumbnailFullPath;
+
+                var targetFolder = Path.Combine("Resources", "Videos");
+                VideoStorage videoStorage = new VideoStorage();
+                try
+                {
+                    fullPath = videoStorage.StoreVideo(targetFolder,file);
+                }
+                catch (ArgumentException ex)
+                {
+                    return BadRequest(ex);
+                }
+
+                var thumbnailFolder = Path.Combine("Resources", "Thumbnails");
+                thumbnailFullPath = Path.Combine(thumbnailFolder, "thumbnail_" + file.FileName + ".jpg");
+
+
+                ThumbnailExtractor thumbnailExtractor = new ThumbnailExtractor();
+                try
+                {
+                    thumbnailExtractor.ExtractThumbnail(fullPath, thumbnailFullPath);
+                }
+                catch (ArgumentException ex)
+                {
+                    return BadRequest(ex);
+                }
+
+                Video video = new Video(id, title, description, fullPath, thumbnailFullPath);
+
+                _context.Video.Add(video);
+                await _context.SaveChangesAsync();
+                return Ok(new { fullPath });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return StatusCode(500, "Internal server error");
+            }
+
         }
+
 
         // DELETE: api/Videos/5
         [HttpDelete("{id}")]

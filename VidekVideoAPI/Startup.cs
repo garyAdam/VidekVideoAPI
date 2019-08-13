@@ -30,7 +30,7 @@ namespace VidekVideoAPI
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddDbContext<VidekVideoAPIContext>(options =>
-                    options.UseSqlServer(Configuration.GetConnectionString("VidekVideoAPIContext")));
+                    options.UseInMemoryDatabase(Configuration.GetConnectionString("VidekVideoAPIContext")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
