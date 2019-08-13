@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VidekVideoAPI.Models;
+using MediaToolkit;
+using MediaToolkit.Model;
+using MediaToolkit.Options;
 
 namespace VidekVideoAPI.Controllers
 {
@@ -45,34 +48,42 @@ namespace VidekVideoAPI.Controllers
 
         // POST: api/Videos
         [HttpPost, DisableRequestSizeLimit]
-        public async Task<ActionResult> PostVideo(Video video)
+        public async Task<ActionResult> PostVideo()
         {
 
             try
             {
                 var file = Request.Form.Files[0];
+                var title = Request.Form["Title"];
+                var description = Request.Form["Description"];
+                Video video = new Video();
+                video.Title = title;
                 var folderName = Path.Combine("Resources", "Videos");
                 var thumbnailFolder = Path.Combine("Resources", "Thumbnails");
+                var ffmpegPath = Path.Combine("Resources", "ffmpeg", "bin","ffmpeg.exe");
                 var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
                 var thumbnailPath = Path.Combine(Directory.GetCurrentDirectory(), thumbnailFolder);
 
                 if (file.Length > 0)
                 {
                     var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
-                    var fullPath = Path.Combine(pathToSave, fileName);
+                    var fullPath = Path.Combine(folderName, fileName);
                     var dbPath = Path.Combine(folderName, fileName);
 
                     using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
                         file.CopyTo(stream);
                     }
-                    var ffmpeg = new NReco.VideoConverter.FFMpegConverter();
-                    ffmpeg.FFMpegExeName = "ffmpeg.exe"; // for Linux/OS-X: "ffmpeg" 
-                    ffmpeg.FFMpegToolPath = "../../../../../ffmpeg/bin";
-                    var fullThumbnailPath = Path.Combine(thumbnailFolder, "thumbnail_" + fileName);
-                    ffmpeg.GetVideoThumbnail(fullPath, new FileStream(fullThumbnailPath, FileMode.Create)); ;
-                    video.ThumbnailPath = fullThumbnailPath;
                     video.SourcePath = fullPath;
+                    MediaFile videofile = new MediaFile(fullPath);
+                    MediaFile imagefile = new MediaFile(Path.Combine(thumbnailPath, "thumbnail_" + fileName + ".jpg"));
+                    using (Engine engine = new Engine(ffmpegPath))
+                    {
+                        engine.GetMetadata(videofile);
+                        engine.GetThumbnail(videofile, imagefile, new ConversionOptions { Seek = TimeSpan.FromSeconds(videofile.Metadata.Duration.TotalSeconds / 2) });
+                    }
+
+
                     _context.Video.Add(video);
                     await _context.SaveChangesAsync();
                     return Ok(new { dbPath });
@@ -82,12 +93,14 @@ namespace VidekVideoAPI.Controllers
                     return BadRequest();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 return StatusCode(500, "Internal server error");
             }
 
         }
+
 
         // DELETE: api/Videos/5
         [HttpDelete("{id}")]
