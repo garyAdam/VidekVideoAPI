@@ -47,6 +47,8 @@ namespace VidekVideoAPI.Controllers
             return video;
         }
 
+      
+
         // POST: api/Videos
         [HttpPost, DisableRequestSizeLimit]
         public async Task<ActionResult> PostVideo()
@@ -60,9 +62,11 @@ namespace VidekVideoAPI.Controllers
                 string fullPath;
                 string thumbnailFullPath;
 
-                Video video = new Video();
-                video.Title = title;
-                video.Descirption = description;
+                Video video = new Video
+                {
+                    Title = title,
+                    Descirption = description
+                };
 
                 var targetFolder = Path.Combine("Resources", "Videos");
                 VideoStorage videoStorage = new VideoStorage();
@@ -89,7 +93,7 @@ namespace VidekVideoAPI.Controllers
                     return BadRequest(ex);
                 }
                 video.SourcePath = fullPath;
-                video.ThumbnailPath = thumbnailFullPath;
+                Thumbnail thumbnail = new Thumbnail(video.Id, thumbnailFullPath);
 
                 _context.Video.Add(video);
                 await _context.SaveChangesAsync();

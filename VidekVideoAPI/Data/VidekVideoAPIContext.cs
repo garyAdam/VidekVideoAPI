@@ -14,5 +14,8 @@ namespace VidekVideoAPI.Models
         }
 
         public DbSet<VidekVideoAPI.Models.Video> Video { get; set; }
+        public DbSet<VidekVideoAPI.Models.Thumbnail> Thumbnails { get; set; }
+
+
     }
 }
