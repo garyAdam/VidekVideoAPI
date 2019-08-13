@@ -11,7 +11,19 @@ namespace VidekVideoAPI.Models
         public string Title { get; set; }
         public string Descirption { get; set; }
         public string SourcePath { get; set; }
-        public User Uploader { get; set; }
         public string ThumbnailPath { get; set; }
+
+        public Video()
+        {
+        }
+
+        public Video(int id, string title, string descirption, string sourcePath, string thumbnailPath)
+        {
+            Id = id;
+            Title = title;
+            Descirption = descirption;
+            SourcePath = sourcePath;
+            ThumbnailPath = thumbnailPath;
+        }
     }
 }

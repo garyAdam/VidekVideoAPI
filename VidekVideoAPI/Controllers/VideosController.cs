@@ -11,6 +11,7 @@ using VidekVideoAPI.Models;
 using MediaToolkit;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
+using VidekVideoAPI.Services;
 
 namespace VidekVideoAPI.Controllers
 {
@@ -54,44 +55,42 @@ namespace VidekVideoAPI.Controllers
             try
             {
                 var file = Request.Form.Files[0];
+                var id = int.Parse(Request.Form["Id"]);
                 var title = Request.Form["Title"];
                 var description = Request.Form["Description"];
-                Video video = new Video();
-                video.Title = title;
-                var folderName = Path.Combine("Resources", "Videos");
+                string fullPath;
+                string thumbnailFullPath;
+
+                var targetFolder = Path.Combine("Resources", "Videos");
+                VideoStorage videoStorage = new VideoStorage();
+                try
+                {
+                    fullPath = videoStorage.StoreVideo(targetFolder,file);
+                }
+                catch (ArgumentException ex)
+                {
+                    return BadRequest(ex);
+                }
+
                 var thumbnailFolder = Path.Combine("Resources", "Thumbnails");
-                var ffmpegPath = Path.Combine("Resources", "ffmpeg", "bin","ffmpeg.exe");
-                var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
-                var thumbnailPath = Path.Combine(Directory.GetCurrentDirectory(), thumbnailFolder);
+                thumbnailFullPath = Path.Combine(thumbnailFolder, "thumbnail_" + file.FileName + ".jpg");
 
-                if (file.Length > 0)
+
+                ThumbnailExtractor thumbnailExtractor = new ThumbnailExtractor();
+                try
                 {
-                    var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
-                    var fullPath = Path.Combine(folderName, fileName);
-                    var dbPath = Path.Combine(folderName, fileName);
-
-                    using (var stream = new FileStream(fullPath, FileMode.Create))
-                    {
-                        file.CopyTo(stream);
-                    }
-                    video.SourcePath = fullPath;
-                    MediaFile videofile = new MediaFile(fullPath);
-                    MediaFile imagefile = new MediaFile(Path.Combine(thumbnailPath, "thumbnail_" + fileName + ".jpg"));
-                    using (Engine engine = new Engine(ffmpegPath))
-                    {
-                        engine.GetMetadata(videofile);
-                        engine.GetThumbnail(videofile, imagefile, new ConversionOptions { Seek = TimeSpan.FromSeconds(videofile.Metadata.Duration.TotalSeconds / 2) });
-                    }
-
-
-                    _context.Video.Add(video);
-                    await _context.SaveChangesAsync();
-                    return Ok(new { dbPath });
+                    thumbnailExtractor.ExtractThumbnail(fullPath, thumbnailFullPath);
                 }
-                else
+                catch (ArgumentException ex)
                 {
-                    return BadRequest();
+                    return BadRequest(ex);
                 }
+
+                Video video = new Video(id, title, description, fullPath, thumbnailFullPath);
+
+                _context.Video.Add(video);
+                await _context.SaveChangesAsync();
+                return Ok(new { fullPath });
             }
             catch (Exception ex)
             {
