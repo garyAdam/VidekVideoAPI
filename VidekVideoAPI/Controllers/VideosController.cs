@@ -67,7 +67,7 @@ namespace VidekVideoAPI.Controllers
                 {
                     fullPath = videoStorage.StoreVideo(targetFolder,file);
                 }
-                catch (ArgumentException ex)
+                catch (Exception ex)
                 {
                     return BadRequest(ex);
                 }
@@ -81,7 +81,7 @@ namespace VidekVideoAPI.Controllers
                 {
                     thumbnailExtractor.ExtractThumbnail(fullPath, thumbnailFullPath);
                 }
-                catch (ArgumentException ex)
+                catch (Exception ex)
                 {
                     return BadRequest(ex);
                 }
