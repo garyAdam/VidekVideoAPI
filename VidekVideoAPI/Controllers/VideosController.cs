@@ -11,7 +11,7 @@ using VidekVideoAPI.Models;
 
 namespace VidekVideoAPI.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/video")]
     [ApiController]
     public class VideosController : ControllerBase
     {
@@ -47,12 +47,14 @@ namespace VidekVideoAPI.Controllers
         [HttpPost, DisableRequestSizeLimit]
         public async Task<ActionResult> PostVideo(Video video)
         {
-          
+
             try
             {
                 var file = Request.Form.Files[0];
-                var folderName = Path.Combine("Resources", "Images");
+                var folderName = Path.Combine("Resources", "Videos");
+                var thumbnailFolder = Path.Combine("Resources", "Thumbnails");
                 var pathToSave = Path.Combine(Directory.GetCurrentDirectory(), folderName);
+                var thumbnailPath = Path.Combine(Directory.GetCurrentDirectory(), thumbnailFolder);
 
                 if (file.Length > 0)
                 {
@@ -64,6 +66,13 @@ namespace VidekVideoAPI.Controllers
                     {
                         file.CopyTo(stream);
                     }
+                    var ffmpeg = new NReco.VideoConverter.FFMpegConverter();
+                    ffmpeg.FFMpegExeName = "ffmpeg.exe"; // for Linux/OS-X: "ffmpeg" 
+                    ffmpeg.FFMpegToolPath = "../../../../../ffmpeg/bin";
+                    var fullThumbnailPath = Path.Combine(thumbnailFolder, "thumbnail_" + fileName);
+                    ffmpeg.GetVideoThumbnail(fullPath, new FileStream(fullThumbnailPath, FileMode.Create)); ;
+                    video.ThumbnailPath = fullThumbnailPath;
+                    video.SourcePath = fullPath;
                     _context.Video.Add(video);
                     await _context.SaveChangesAsync();
                     return Ok(new { dbPath });
@@ -73,11 +82,11 @@ namespace VidekVideoAPI.Controllers
                     return BadRequest();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, "Internal server error");
             }
-            
+
         }
 
         // DELETE: api/Videos/5
