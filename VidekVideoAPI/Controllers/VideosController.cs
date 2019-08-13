@@ -55,17 +55,20 @@ namespace VidekVideoAPI.Controllers
             try
             {
                 var file = Request.Form.Files[0];
-                var id = int.Parse(Request.Form["Id"]);
                 var title = Request.Form["Title"];
                 var description = Request.Form["Description"];
                 string fullPath;
                 string thumbnailFullPath;
 
+                Video video = new Video();
+                video.Title = title;
+                video.Descirption = description;
+
                 var targetFolder = Path.Combine("Resources", "Videos");
                 VideoStorage videoStorage = new VideoStorage();
                 try
                 {
-                    fullPath = videoStorage.StoreVideo(targetFolder,file);
+                    fullPath = videoStorage.StoreVideo(targetFolder,file, video.Id);
                 }
                 catch (Exception ex)
                 {
@@ -73,7 +76,7 @@ namespace VidekVideoAPI.Controllers
                 }
 
                 var thumbnailFolder = Path.Combine("Resources", "Thumbnails");
-                thumbnailFullPath = Path.Combine(thumbnailFolder, "thumbnail_" + file.FileName + ".jpg");
+                thumbnailFullPath = Path.Combine(thumbnailFolder, "thumbnail_" + file.FileName + video.Id + ".jpg");
 
 
                 ThumbnailExtractor thumbnailExtractor = new ThumbnailExtractor();
@@ -85,8 +88,8 @@ namespace VidekVideoAPI.Controllers
                 {
                     return BadRequest(ex);
                 }
-
-                Video video = new Video(id, title, description, fullPath, thumbnailFullPath);
+                video.SourcePath = fullPath;
+                video.ThumbnailPath = thumbnailFullPath;
 
                 _context.Video.Add(video);
                 await _context.SaveChangesAsync();

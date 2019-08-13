@@ -10,13 +10,13 @@ namespace VidekVideoAPI.Services
 {
     public class VideoStorage
     {
-        public string StoreVideo(string folderName, IFormFile file)
+        public string StoreVideo(string folderName, IFormFile file, int id)
         {
 
 
             if (file.Length > 0)
             {
-                var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
+                var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"') + id;
                 var fullPath = Path.Combine(folderName, fileName);
 
                 using (var stream = new FileStream(fullPath, FileMode.Create))
