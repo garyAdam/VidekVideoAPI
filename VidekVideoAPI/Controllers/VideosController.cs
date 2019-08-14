@@ -47,7 +47,19 @@ namespace VidekVideoAPI.Controllers
             return video;
         }
 
+        // GET: api/Videos/5/thumbnail
+        [HttpGet("{id}/thumbnail")]
+        public async Task<ActionResult> GetVideoThumbnail(int id)
+        {
+            var thumbnail = await _context.Thumbnails.FindAsync(id);
 
+            if (thumbnail == null)
+            {
+                return NotFound();
+            }
+
+            return PhysicalFile(thumbnail.SourcePath, "image/jpeg");
+        }
 
         // POST: api/Videos
         [HttpPost, DisableRequestSizeLimit]
@@ -95,8 +107,7 @@ namespace VidekVideoAPI.Controllers
                 video.SourcePath = fullPath;
                 Thumbnail thumbnail = new Thumbnail();
                 thumbnail.VideoID = video.Id;
-                thumbnail.SourcePath = video.SourcePath;
-
+                thumbnail.SourcePath = thumbnailFullPath;
                 _context.Thumbnails.Add(thumbnail);
                 _context.Video.Add(video);
                 await _context.SaveChangesAsync();
