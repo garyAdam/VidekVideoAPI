@@ -47,7 +47,19 @@ namespace VidekVideoAPI.Controllers
             return video;
         }
 
-      
+        // GET: api/Videos/5/thumbnail
+        [HttpGet("{id}/thumbnail")]
+        public async Task<ActionResult> GetVideoThumbnail(int id)
+        {
+            var thumbnail = await _context.Thumbnails.FindAsync(id);
+
+            if (thumbnail == null)
+            {
+                return NotFound();
+            }
+
+            return PhysicalFile(thumbnail.SourcePath, "image/jpeg");
+        }
 
         // POST: api/Videos
         [HttpPost, DisableRequestSizeLimit]
@@ -68,19 +80,19 @@ namespace VidekVideoAPI.Controllers
                     Descirption = description
                 };
 
-                var targetFolder = Path.Combine("Resources", "Videos");
+                var targetFolder = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Videos");
                 VideoStorage videoStorage = new VideoStorage();
                 try
                 {
-                    fullPath = videoStorage.StoreVideo(targetFolder,file, video.Id);
+                    fullPath = videoStorage.StoreVideo(targetFolder, file, video.Id);
                 }
                 catch (Exception ex)
                 {
                     return BadRequest(ex);
                 }
 
-                var thumbnailFolder = Path.Combine("Resources", "Thumbnails");
-                thumbnailFullPath = Path.Combine(thumbnailFolder, "thumbnail_" + file.FileName + video.Id + ".jpg");
+                var thumbnailFolder = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Thumbnails");
+                thumbnailFullPath = Path.Combine(thumbnailFolder, video.Id + "thumbnail_" + file.FileName + ".jpg");
 
 
                 ThumbnailExtractor thumbnailExtractor = new ThumbnailExtractor();
@@ -93,8 +105,10 @@ namespace VidekVideoAPI.Controllers
                     return BadRequest(ex);
                 }
                 video.SourcePath = fullPath;
-                Thumbnail thumbnail = new Thumbnail(video.Id, thumbnailFullPath);
-
+                Thumbnail thumbnail = new Thumbnail();
+                thumbnail.VideoID = video.Id;
+                thumbnail.SourcePath = thumbnailFullPath;
+                _context.Thumbnails.Add(thumbnail);
                 _context.Video.Add(video);
                 await _context.SaveChangesAsync();
                 return Ok(new { fullPath });
