@@ -16,7 +16,7 @@ namespace VidekVideoAPI.Services
 
             if (file.Length > 0)
             {
-                var fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"') + id;
+                var fileName = id + ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
                 var fullPath = Path.Combine(folderName, fileName);
 
                 using (var stream = new FileStream(fullPath, FileMode.Create))
