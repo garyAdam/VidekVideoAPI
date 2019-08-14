@@ -17,11 +17,11 @@ namespace VidekVideoAPI.Controllers
 {
     [Route("api/video")]
     [ApiController]
-    public class VideosController : ControllerBase
+    public class VideoController : ControllerBase
     {
         private readonly VidekVideoAPIContext _context;
 
-        public VideosController(VidekVideoAPIContext context)
+        public VideoController(VidekVideoAPIContext context)
         {
             _context = context;
         }
@@ -58,7 +58,7 @@ namespace VidekVideoAPI.Controllers
                 return NotFound();
             }
 
-            return PhysicalFile(thumbnail.SourcePath, "image/jpeg");
+            return PhysicalFile(Path.Combine(Directory.GetCurrentDirectory(),thumbnail.SourcePath), "image/jpeg");
         }
 
         // POST: api/Videos
@@ -80,37 +80,22 @@ namespace VidekVideoAPI.Controllers
                     Descirption = description
                 };
 
-                var targetFolder = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Videos");
-                VideoStorage videoStorage = new VideoStorage();
                 try
                 {
+                    var targetFolder = Path.Combine("Resources", "Videos");
+                    VideoStorage videoStorage = new VideoStorage();
                     fullPath = videoStorage.StoreVideo(targetFolder, file, video.Id);
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(ex);
-                }
 
-                var thumbnailFolder = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "Thumbnails");
-                thumbnailFullPath = Path.Combine(thumbnailFolder, video.Id + "thumbnail_" + file.FileName + ".jpg");
-
-
-                ThumbnailExtractor thumbnailExtractor = new ThumbnailExtractor();
-                try
-                {
+                    var thumbnailFolder = Path.Combine("Resources", "Thumbnails");
+                    thumbnailFullPath = Path.Combine(thumbnailFolder, video.Id + "thumbnail_" + file.FileName + ".jpg");
+                    ThumbnailExtractor thumbnailExtractor = new ThumbnailExtractor();
                     thumbnailExtractor.ExtractThumbnail(fullPath, thumbnailFullPath);
                 }
                 catch (Exception ex)
                 {
                     return BadRequest(ex);
                 }
-                video.SourcePath = fullPath;
-                Thumbnail thumbnail = new Thumbnail();
-                thumbnail.VideoID = video.Id;
-                thumbnail.SourcePath = thumbnailFullPath;
-                _context.Thumbnails.Add(thumbnail);
-                _context.Video.Add(video);
-                await _context.SaveChangesAsync();
+                await UpdateContext(fullPath, thumbnailFullPath, video);
                 return Ok(new { fullPath });
             }
             catch (Exception ex)
@@ -119,6 +104,23 @@ namespace VidekVideoAPI.Controllers
                 return StatusCode(500, "Internal server error");
             }
 
+        }
+
+        private async Task UpdateContext(string fullPath, string thumbnailFullPath, Video video)
+        {
+            video.SourcePath = fullPath;
+            Thumbnail thumbnail = new Thumbnail();
+            thumbnail.VideoID = video.Id;
+            thumbnail.SourcePath = thumbnailFullPath;
+            ThumbnailViewItem thumbnailViewItem = new ThumbnailViewItem();
+            thumbnailViewItem.Title = video.Title;
+            thumbnailViewItem.VideoId = video.Id;
+            thumbnailViewItem.URL = Request.Path + "/" + video.Id + "/thumbnail";
+
+            _context.ThumbnailViewItem.Add(thumbnailViewItem);
+            _context.Thumbnails.Add(thumbnail);
+            _context.Video.Add(video);
+            await _context.SaveChangesAsync();
         }
 
 
