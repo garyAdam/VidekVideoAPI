@@ -96,6 +96,7 @@ namespace VidekVideoAPI.Controllers
                 Thumbnail thumbnail = new Thumbnail();
                 thumbnail.VideoID = video.Id;
                 thumbnail.SourcePath = video.SourcePath;
+
                 _context.Thumbnails.Add(thumbnail);
                 _context.Video.Add(video);
                 await _context.SaveChangesAsync();
