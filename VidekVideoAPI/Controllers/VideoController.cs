@@ -1,27 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VidekVideoAPI.Models;
-using MediaToolkit;
-using MediaToolkit.Model;
-using MediaToolkit.Options;
 using VidekVideoAPI.Services;
 
 namespace VidekVideoAPI.Controllers
 {
     [Route("api/video")]
     [ApiController]
-    public class VideosController : ControllerBase
+    public class VideoController : ControllerBase
     {
         private readonly VidekVideoAPIContext _context;
 
-        public VideosController(VidekVideoAPIContext context)
+        public VideoController(VidekVideoAPIContext context)
         {
             _context = context;
         }
@@ -45,6 +40,23 @@ namespace VidekVideoAPI.Controllers
             }
 
             return video;
+        }
+
+        [HttpGet("{id}/stream")]
+        public async Task<ActionResult> GetVideoContent(int id)
+        {
+            var video = await _context.Video.FindAsync(id);
+
+            FileInfo fileInfo = new FileInfo(video.SourcePath);
+            if (fileInfo.Exists)
+            {
+                FileStream fs = new FileStream(video.SourcePath, FileMode.Open);
+
+                return new FileStreamResult(fs, new MediaTypeHeaderValue("video/mp4").MediaType);
+
+            }
+
+            return BadRequest();
         }
 
         // GET: api/Videos/5/thumbnail
