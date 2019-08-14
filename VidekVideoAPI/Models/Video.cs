@@ -12,6 +12,7 @@ namespace VidekVideoAPI.Models
         public string Title { get; set; }
         public string Descirption { get; set; }
         public string SourcePath { get; set; }
+        public string StreamURL { get; set; }
 
         public Video()
         {
