@@ -121,13 +121,15 @@ namespace VidekVideoAPI.Controllers
         private async Task UpdateContext(string fullPath, string thumbnailFullPath, Video video)
         {
             video.SourcePath = fullPath;
+            video.StreamURL = Request.Path + "/" + video.Id + "/stream";
             Thumbnail thumbnail = new Thumbnail();
             thumbnail.VideoID = video.Id;
             thumbnail.SourcePath = thumbnailFullPath;
             ThumbnailViewItem thumbnailViewItem = new ThumbnailViewItem();
             thumbnailViewItem.Title = video.Title;
             thumbnailViewItem.VideoId = video.Id;
-            thumbnailViewItem.URL = Request.Path + "/" + video.Id + "/thumbnail";
+            thumbnailViewItem.ThumbnailURL = Request.Path + "/" + video.Id + "/thumbnail";
+            thumbnailViewItem.VideoURL = Request.Path + "/" + video.Id;
 
             _context.ThumbnailViewItem.Add(thumbnailViewItem);
             _context.Thumbnails.Add(thumbnail);
