@@ -107,8 +107,9 @@ namespace VidekVideoAPI.Controllers
                 {
                     return BadRequest(ex);
                 }
-                await UpdateContext(fullPath, thumbnailFullPath, video);
-                return Ok(new { fullPath });
+                ThumbnailViewItem thumbnailViewItem = new ThumbnailViewItem();
+                await UpdateContext(fullPath, thumbnailFullPath, video,thumbnailViewItem);
+                return Ok(new { thumbnailViewItem });
             }
             catch (Exception ex)
             {
@@ -118,14 +119,13 @@ namespace VidekVideoAPI.Controllers
 
         }
 
-        private async Task UpdateContext(string fullPath, string thumbnailFullPath, Video video)
+        private async Task UpdateContext(string fullPath, string thumbnailFullPath, Video video,ThumbnailViewItem thumbnailViewItem)
         {
             video.SourcePath = fullPath;
             video.StreamURL = Request.Path + video.Id + "/stream";
             Thumbnail thumbnail = new Thumbnail();
             thumbnail.VideoID = video.Id;
             thumbnail.SourcePath = thumbnailFullPath;
-            ThumbnailViewItem thumbnailViewItem = new ThumbnailViewItem();
             thumbnailViewItem.Title = video.Title;
             thumbnailViewItem.VideoId = video.Id;
             thumbnailViewItem.ThumbnailURL = Request.Path  + video.Id + "/thumbnail";
