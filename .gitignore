@@ -341,5 +341,5 @@ healthchecksdb
 
 #content
 /VidekVideoAPI/Resources/ffmpeg
-/VidekVideoAPI/Resources/Videos
-/VidekVideoAPI/Resources/Thumbnails
+/VidekVideoAPI/Resources/Videos/
+/VidekVideoAPI/Resources/Thumbnails/
