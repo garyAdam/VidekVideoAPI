@@ -51,9 +51,7 @@ namespace VidekVideoAPI.Controllers
             if (fileInfo.Exists)
             {
                 FileStream fs = new FileStream(video.SourcePath, FileMode.Open);
-
                 return new FileStreamResult(fs, new MediaTypeHeaderValue("video/mp4").MediaType);
-
             }
 
             return BadRequest();
@@ -85,12 +83,17 @@ namespace VidekVideoAPI.Controllers
                 var description = Request.Form["Description"];
                 string fullPath;
                 string thumbnailFullPath;
-
                 Video video = new Video
                 {
                     Title = title,
                     Descirption = description
                 };
+                Thumbnail thumbnail = new Thumbnail();
+                ThumbnailViewItem thumbnailViewItem = new ThumbnailViewItem();
+                thumbnailViewItem.Video = video;
+                _context.Video.Add(video);
+                await _context.SaveChangesAsync();
+                video = await _context.Video.LastAsync();
 
                 try
                 {
@@ -107,8 +110,7 @@ namespace VidekVideoAPI.Controllers
                 {
                     return BadRequest(ex);
                 }
-                ThumbnailViewItem thumbnailViewItem = new ThumbnailViewItem();
-                await UpdateContext(fullPath, thumbnailFullPath, video,thumbnailViewItem);
+                await UpdateContext(fullPath, thumbnailFullPath,thumbnail, video,thumbnailViewItem);
                 return Ok(new { thumbnailViewItem });
             }
             catch (Exception ex)
@@ -119,21 +121,19 @@ namespace VidekVideoAPI.Controllers
 
         }
 
-        private async Task UpdateContext(string fullPath, string thumbnailFullPath, Video video,ThumbnailViewItem thumbnailViewItem)
+        private async Task UpdateContext(string fullPath, string thumbnailFullPath,Thumbnail thumbnail, Video video,ThumbnailViewItem thumbnailViewItem)
         {
             video.SourcePath = fullPath;
             video.StreamURL = Request.Path + video.Id + "/stream";
-            Thumbnail thumbnail = new Thumbnail();
-            thumbnail.VideoID = video.Id;
+            thumbnail.Video = video;
             thumbnail.SourcePath = thumbnailFullPath;
             thumbnailViewItem.Title = video.Title;
-            thumbnailViewItem.VideoId = video.Id;
             thumbnailViewItem.ThumbnailURL = Request.Path  + video.Id + "/thumbnail";
             thumbnailViewItem.VideoURL = Request.Path + video.Id;
 
             _context.ThumbnailViewItem.Add(thumbnailViewItem);
             _context.Thumbnails.Add(thumbnail);
-            _context.Video.Add(video);
+            _context.Video.Update(video);
             await _context.SaveChangesAsync();
         }
 

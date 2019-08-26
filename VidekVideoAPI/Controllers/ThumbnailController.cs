@@ -31,7 +31,8 @@ namespace VidekVideoAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<ThumbnailViewItem>> GetThumbnailViewItem(int id)
         {
-            var thumbnailViewItem = await _context.ThumbnailViewItem.FindAsync(id);
+
+            var thumbnailViewItem = await _context.ThumbnailViewItem.Where(tn => tn.VideoId == id).FirstAsync();
 
             if (thumbnailViewItem == null)
             {
