@@ -24,7 +24,7 @@ namespace VidekVideoAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ThumbnailViewItem>>> GetThumbnailViewItem()
         {
-            return await _context.ThumbnailViewItem.ToListAsync();
+            return await _context.ThumbnailViewItems.ToListAsync();
         }
 
         // GET: api/Thumbnail
@@ -32,7 +32,7 @@ namespace VidekVideoAPI.Controllers
         public async Task<ActionResult<ThumbnailViewItem>> GetThumbnailViewItem(int id)
         {
 
-            var thumbnailViewItem = await _context.ThumbnailViewItem.Where(tn => tn.VideoId == id).FirstAsync();
+            var thumbnailViewItem = await _context.ThumbnailViewItems.Where(tn => tn.VideoId == id).FirstAsync();
 
             if (thumbnailViewItem == null)
             {
@@ -45,7 +45,7 @@ namespace VidekVideoAPI.Controllers
 
         private bool ThumbnailViewItemExists(int id)
         {
-            return _context.ThumbnailViewItem.Any(e => e.VideoId == id);
+            return _context.ThumbnailViewItems.Any(e => e.VideoId == id);
         }
     }
 }

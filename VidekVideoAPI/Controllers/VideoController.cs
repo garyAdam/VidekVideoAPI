@@ -25,14 +25,14 @@ namespace VidekVideoAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Video>>> GetVideo()
         {
-            return await _context.Video.ToListAsync();
+            return await _context.Videos.ToListAsync();
         }
 
         // GET: api/Videos/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Video>> GetVideo(int id)
         {
-            var video = await _context.Video.FindAsync(id);
+            var video = await _context.Videos.FindAsync(id);
 
             if (video == null)
             {
@@ -45,7 +45,7 @@ namespace VidekVideoAPI.Controllers
         [HttpGet("{id}/stream")]
         public async Task<ActionResult> GetVideoContent(int id)
         {
-            var video = await _context.Video.FindAsync(id);
+            var video = await _context.Videos.FindAsync(id);
 
             FileInfo fileInfo = new FileInfo(video.SourcePath);
             if (fileInfo.Exists)
@@ -91,9 +91,9 @@ namespace VidekVideoAPI.Controllers
                 Thumbnail thumbnail = new Thumbnail();
                 ThumbnailViewItem thumbnailViewItem = new ThumbnailViewItem();
                 thumbnailViewItem.Video = video;
-                _context.Video.Add(video);
+                _context.Videos.Add(video);
                 await _context.SaveChangesAsync();
-                video = await _context.Video.LastAsync();
+                video = await _context.Videos.LastAsync();
 
                 try
                 {
@@ -131,9 +131,9 @@ namespace VidekVideoAPI.Controllers
             thumbnailViewItem.ThumbnailURL = Request.Path  + video.Id + "/thumbnail";
             thumbnailViewItem.VideoURL = Request.Path + video.Id;
 
-            _context.ThumbnailViewItem.Add(thumbnailViewItem);
+            _context.ThumbnailViewItems.Add(thumbnailViewItem);
             _context.Thumbnails.Add(thumbnail);
-            _context.Video.Update(video);
+            _context.Videos.Update(video);
             await _context.SaveChangesAsync();
         }
 
@@ -142,13 +142,13 @@ namespace VidekVideoAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Video>> DeleteVideo(int id)
         {
-            var video = await _context.Video.FindAsync(id);
+            var video = await _context.Videos.FindAsync(id);
             if (video == null)
             {
                 return NotFound();
             }
 
-            _context.Video.Remove(video);
+            _context.Videos.Remove(video);
             await _context.SaveChangesAsync();
 
             return video;
